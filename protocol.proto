@@ -1,0 +1,338 @@
+
+    message MeteorMsg 
+    {
+        required MsgType cmd = 1;
+        enum MsgType
+        {
+            ProtocolVerify = 10;//协议匹配,服务器，客户端互发，同一个消息ID
+            GetRoomReq = 100;
+            GetRoomRsp = 101;
+            CreateRoomReq = 102;
+            CreateRoomRsp = 103;//建立房间其他人必须刷新，不会给其他人发有房间建立的消息.
+            JoinRoomReq = 104;
+            JoinRoomRsp = 105;
+            OnJoinRoomRsp = 106;//当我进入房间时下发给其他人.
+            EnterLevelReq = 107;//请求进入场景，
+            EnterLevelRsp = 108;//下发此消息给请求者，下发其他消息告知某人正式进入场景了.同时把帧指令表发送给进入者
+            OnEnterLevelRsp = 109;//取得了新进入玩家角色信息给与其他全部玩家,要包括服务器Turn编号和帧编号.
+            LeaveRoomReq = 110;//某角色要离开房间.
+            LeaveRoomRsp = 119;//不给离开房间者回消息.
+            OnLeaveRoomRsp = 111;//某人离开时，发送给其他玩家
+
+            SyncTurnReq = 112;//用户更新自己的输入.一个Turn内 5-10帧的(输入/其他) 这两个事件是帧同步核心.
+            SyncTurnRsp = 113;//服务器下发场景内全部角色的输入.一个Turn内 5-10帧 所有用户每帧的事件（输入/其他）
+
+            ChatInRoomReq = 120;//用户在房间内发送信息
+            ChatInRoomRsp = 121;//收到某个用户在房间的信息
+            ChatInLobbyReq = 122;//用户在大厅的信息
+            ChatInLobbyRsp = 123;//收到某个用户在大厅的信息
+            EnterQueueReq = 124;//进入组队玩法
+            EnterQueueRsp = 125;//进入组队玩法是否成功
+            ExitQueueReq = 126;//排队中的玩家离开队伍
+            QueueMsgWaitReady = 127;//等待你准备
+            QueueMsgCanceled = 128;//由于玩家未确定导致的这一次匹配失败
+            QueueMsgReadyReq = 129;//玩家确定排队请求，准备进入选角色界面,某个玩家准备好，上发
+            OnBattleBegin = 130;//全部角色都准备好后-进入选角色界面-超时后队伍解散
+            OnBattleCancel = 131;//全部准备好后，某个原因导致游戏解散,要写明粗略原因
+            UserSelectRole = 132;//某个玩家选择某个角色
+            OnUserSelectRole = 133;//其他玩家选择某个角色
+            UserSelectSkill = 134;//选择/切换某个技能
+            OnUserSelectSkill = 135;//其他玩家选择某个技能
+            UserSelectSkin = 136;//选择某个皮肤
+            OnUserSelectSkin = 137;//其他玩家选择某个皮肤
+            UserQuit = 138;//在选择角色面板退出-引发OnBattleCancel事件
+            OnBattleEnterLevel = 139;//全部玩家在超时时间内选择好英雄-技能-皮肤，服务器倒计时完毕，开始进入加载场景界面.
+            OnBattleLoading = 140;//在玩家同步加载界面-玩家的加载进度发生变化-服务器发送往客户端
+            OnBattleStart = 141;//玩家全部从加载界面离开，进入到战场中
+            OnBattleResult = 142;//战斗结束-场景内
+            OnBattleResultDetail = 143;//战斗结束后，下发伤害统计报表.
+            OnPlayerSellItem = 144;//玩家出售物品
+            OnPlayerBuyItem = 145;//玩家购买物品
+            OnPlayerQuit = 146;//玩家退出场景,可能是超时检测，也可能是主动退出
+            OnPlayerReStart = 147;//某玩家断线后重新开启客户端
+            OnPlayerFetchInput = 148;//玩家重连时不断拉取服务器保存的操作序列
+            OnPlayerReConnect = 149;//断线重连开始-服务器下发时期内所有玩家的全部操作
+            AudioChat = 150;//音频包,房间内的.
+
+			ActionStart = 1000;//帧同步事件编号开始
+			SyncStart = 1001;//帧同步初始化，下发随机种子之类的
+			KeyDown = 1002;//按键按下
+			KeyUp = 1003;//按键抬起
+			BtnClick = 1004;//按钮事件-类似丢弃武器，爆气之类，与上方区别在于该事件无需时长判定，无蓄力
+			PlayerEnter = 1003;//玩家在该帧内进入场景
+			PlayerLeave = 1004;//玩家在该帧内退出场景
+			ActionEnd = 2000;//帧同步事件编号结束
+        }
+    }
+
+	message KeyData
+	{
+		required uint32 key = 1;//按键
+	}
+
+	message BtnClickData
+	{
+		required uint32 id = 1;//ui按钮id
+	}
+
+	message SyncInitData
+	{
+		required uint32 randomSeed = 1;//
+	}
+
+	//负责角色的创建和删除(进场和退场).
+	message PlayerEventData
+	{
+		required uint32 playerId = 1;
+		required uint32 camp = 2;
+        required uint32 model = 3;
+        required uint32 weapon = 4;
+	}
+
+    message EnterQueueRsp
+    {
+        required uint32 result = 1;//结果.
+        required uint32 playerId = 2;//进入排队玩家分配到的玩家id
+        required uint32 playerInQueue = 3;//当前排队人数.
+    }
+
+    message OnBattleBegin
+    {
+        repeated uint32 TeamMemberAId = 1;//自己队伍的ID
+        repeated uint32 TeamMemberBId = 2;//对方队伍的ID
+        repeated string TeamMemberA = 3;//自己队伍的队友名称-和ID一一对应
+        repeated string TeamMemberB = 4;//
+    }
+
+    message UserSelectRole
+    {
+        required uint32 playerId = 1;
+        required uint32 HeroId = 2;
+    }
+
+    message UserSelectSkill
+    {
+        required uint32 playerId = 1;
+        required uint32 SkillId = 2;
+    }
+    
+    message UserSelectSkin
+    {
+        required uint32 playerId = 1;
+        required uint32 Skin = 2;
+    }
+
+    //本次组队被解散
+    message OnBattleCanceled
+    {
+        required uint32 reason = 1;//解散原因
+    }
+
+    message OnBattleLoading
+    {
+        repeated uint32 playerId = 1;//所有玩家ID
+        repeated uint32 percent = 2;//所有玩家加载进度
+    }
+
+    message OnBattleResult
+    {
+        required uint32 result = 1;//战斗结果 [1：我方胜利] [0：我方失败]
+    }
+
+    //玩家请求售出物品-
+    message PlayerSellItem
+    {
+        required uint32 playerId = 1;
+        required uint32 itemId = 2;
+    }
+
+    //玩家请求购买物品-
+    message PlayerBuyItem
+    {
+        required uint32 playerId = 1;
+        required uint32 itemId = 2;
+    }
+
+    //客户端服务器协议验证-防止网关被随意使用
+    message ProtocolVerifyReq
+    {
+        required uint32 protocol = 1;//协议版本号
+        required string data = 2;//客户端-玩家名称，用来在大厅发消息标识
+    }
+
+    message ProtocolVerifyRsp
+    {
+        required uint32 result = 1;//成功或失败.
+        required string message = 2;//失败或成功原因.
+    }
+
+    //房间规则是，不限时间，等最后一个人离开后，关闭
+    message RoomInfo
+    {
+        required uint32 roomId = 1;
+        required string roomName = 2;
+        required RoomRule rule = 3;
+		required RoomPattern pattern = 4;//正常模式/播放录像文件
+        required uint32 levelIdx = 5;
+        required uint32 password = 6;//0不要密码 1要密码
+        required MeteorVersion version = 7;//版本号1=107 2=9.07
+        required uint32 Group1 = 8;//阵营1人数
+        required uint32 Group2 = 9;//阵营2人数
+        required uint32 playerCount = 10;//不区分阵营时人数
+        required uint32 maxPlayer = 11;//最大玩家数量
+        enum RoomRule
+        {
+            MZ = 1;//盟主
+            ROB = 2;//截标
+            Defence = 3;//护城
+            KillTarget = 4;//暗杀
+            Endless = 5;//死斗
+            Normal = 6;//单机关卡配置
+            Story = 7;//联机进行副本，团队 VS AI
+            Moba = 8;//仿MOBA方式
+        }
+
+        enum RoomPattern
+        {
+            _Normal = 1;//普通
+            _Replay = 2;//转播
+        }
+
+		enum MeteorVersion
+		{
+			V107 = 1;
+			V907 = 2;
+		}
+
+		enum ErrorCode
+		{
+			RoomNotExist = 1;
+			RoomPlayerFull = 2;
+			RoomNeedPassword = 3;
+			RoomVersionErr = 4;
+			UserInAnotherRoom = 5;
+			RoomFull = 6;//服务器房间数到达上限
+			Room
+		}
+    }
+
+    message GetRoomRsp
+    {
+        repeated RoomInfo RoomInLobby = 2;
+    }
+
+    message CreateRoomReq
+    {
+		required RoomPattern pattern = 1;//正常模式/播放录像文件
+        required uint32 maxPlayer = 2;
+        required uint32 levelIdx = 3;
+        required RoomRule rule = 4;//规则
+        required string roomName = 5;//房间名称.
+        required uint32 hpMax = 6;//最大血值.
+        required uint32 roundTime = 7;//最大时间
+		required MeteorVersion version = 8;
+        optional string secret = 9;//密码
+		optional repeated float replay_data = 10;//重播数据-即录像数据.
+    }
+
+    message CreateRoomRsp
+    {
+        required uint32 result = 1;//1确认成功，其他失败,0服务器无法容纳更多房间请换服务器
+        required uint32 roomId = 2;//得到房间id.
+        required uint32 levelId = 3;//得到房间使用的关卡信息，这个关卡可能是资料片其中之一.
+    }
+
+    message JoinRoomReq
+    {
+        required uint32 roomId = 1;
+        required MeteorVersion version = 2;//本地版本
+        optional string password = 3;//密码
+    }
+
+    message JoinRoomRsp
+    {
+        required uint32 result = 1;//1成功，其他失败
+        required uint32 reason = 2;//失败为原因编号:1人数达到最大数量 2 没找到 3 在其他房间内 4 版本不匹配 5 需要密码
+        required uint32 levelIdx = 3;//成功返回房间关卡编号
+        required uint32 roomId = 4;//哪个房间.
+        required uint32 playerId = 5;//你的角色在服务器的编号.
+    }
+
+	//返回GameFrames给客户端，客户端快速播放，一直到服务器下发角色在某一帧进入关卡，再创建角色，即可达到恢复场景任意时刻的状态
+    message EnterLevelReq
+    {
+        required uint32 camp = 1;
+        required uint32 model = 2;
+        required uint32 weapon = 3;
+    }
+    
+    //定点数，3位小数.
+    message Vector2_
+    {
+        required int32 x = 1;
+        required int32 y = 2;
+    }
+
+    message Vector3_
+    {
+        required int32 x = 1;
+        required int32 y = 2;
+        required int32 z = 3;
+    }
+
+    message Quaternion_
+    {
+        required int32 x = 1;
+        required int32 y = 2;
+        required int32 z = 3;
+        required int32 w = 4;
+    }
+
+    message Player_
+    {
+        required uint32 id = 1;
+        required string name = 2;
+        required uint32 weapon = 3;
+        required Vector3_ pos = 4;//根的位置
+        required Quaternion_ rotation = 5;//根的旋转
+        required int32 model = 6;
+        required int32 hp = 7;
+        required int32 camp = 8;//阵营.
+        required int32 spawnpoint = 9;//出生点.只有初始化使用
+    }
+
+    
+    message TurnFrames
+    {
+        required uint32 turnIndex = 1;//turn序号-一个turn代表8帧内各个玩家的指令队列.
+        repeated FrameAction actions = 2;
+    }
+
+	message GameFrames
+    {
+        repeated TurnFrames frames = 1;
+    }
+
+    //帧事件.
+    message FrameAction
+    {
+		required uint32 GameLogicFrame = 1;//游戏逻辑帧编号.
+		required uint32 playerId = 2; 
+        required MsgType action = 3;//发生了什么
+		required repeated bytes data = 4;//事件参数,按ActionType指定的类型对应结构体.
+    }
+
+    //聊天消息.
+    message ChatMsg
+    {
+        required uint32 playerId = 1;//玩家
+        required uint32 channelType = 2;//频道类型 1-大厅 2-战场
+        required string chatMessage = 3;//max 256
+    }
+
+    message AudioChatMsg
+    {
+        required uint32 playerId = 1;//玩家
+        required uint32 type = 2;//帧类型  1 单帧即为语音消息 2 语音消息开始帧 3 语音消息结束帧
+        repeated float audio_data = 3;//音频数据
+    }
