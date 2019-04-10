@@ -59,8 +59,8 @@
 			KeyDown = 1002;//按键按下
 			KeyUp = 1003;//按键抬起
 			BtnClick = 1004;//按钮事件-类似丢弃武器，爆气之类，与上方区别在于该事件无需时长判定，无蓄力
-			PlayerEnter = 1003;//玩家在该帧内进入场景
-			PlayerLeave = 1004;//玩家在该帧内退出场景
+			PlayerEnter = 1005;//玩家在该帧内进入场景
+			PlayerLeave = 1006;//玩家在该帧内退出场景
 			ActionEnd = 2000;//帧同步事件编号结束
         }
     }
@@ -174,12 +174,13 @@
         required RoomRule rule = 3;
 		required RoomPattern pattern = 4;//正常模式/播放录像文件
         required uint32 levelIdx = 5;
-        required uint32 password = 6;//0不要密码 1要密码
-        required MeteorVersion version = 7;//版本号1=107 2=9.07
-        required uint32 Group1 = 8;//阵营1人数
-        required uint32 Group2 = 9;//阵营2人数
-        required uint32 playerCount = 10;//不区分阵营时人数
-        required uint32 maxPlayer = 11;//最大玩家数量
+		required uint32 hpMax = 6;
+        required uint32 password = 7;//0不要密码 1要密码
+        required MeteorVersion version = 8;//版本号1=107 2=9.07
+        required uint32 Group1 = 9;//阵营1人数
+        required uint32 Group2 = 10;//阵营2人数
+        required uint32 playerCount = 11;//不区分阵营时人数
+        required uint32 maxPlayer = 12;//最大玩家数量
         enum RoomRule
         {
             MZ = 1;//盟主
@@ -212,7 +213,6 @@
 			RoomVersionErr = 4;
 			UserInAnotherRoom = 5;
 			RoomFull = 6;//服务器房间数到达上限
-			Room
 		}
     }
 
@@ -223,16 +223,16 @@
 
     message CreateRoomReq
     {
-		required RoomPattern pattern = 1;//正常模式/播放录像文件
+		required RoomInfo.RoomPattern pattern = 1;//正常模式/播放录像文件
         required uint32 maxPlayer = 2;
         required uint32 levelIdx = 3;
-        required RoomRule rule = 4;//规则
+        required RoomInfo.RoomRule rule = 4;//规则
         required string roomName = 5;//房间名称.
         required uint32 hpMax = 6;//最大血值.
         required uint32 roundTime = 7;//最大时间
-		required MeteorVersion version = 8;
+		required RoomInfo.MeteorVersion version = 8;
         optional string secret = 9;//密码
-		optional repeated float replay_data = 10;//重播数据-即录像数据.
+		repeated float replay_data = 10;//重播数据-即录像数据.
     }
 
     message CreateRoomRsp
@@ -245,7 +245,7 @@
     message JoinRoomReq
     {
         required uint32 roomId = 1;
-        required MeteorVersion version = 2;//本地版本
+        required RoomInfo.MeteorVersion version = 2;//本地版本
         optional string password = 3;//密码
     }
 
@@ -318,8 +318,8 @@
     {
 		required uint32 GameLogicFrame = 1;//游戏逻辑帧编号.
 		required uint32 playerId = 2; 
-        required MsgType action = 3;//发生了什么
-		required repeated bytes data = 4;//事件参数,按ActionType指定的类型对应结构体.
+        required MeteorMsg.MsgType action = 3;//发生了什么
+		repeated bytes data = 4;//事件参数,按ActionType指定的类型对应结构体.
     }
 
     //聊天消息.
