@@ -18,10 +18,8 @@
             LeaveRoomReq = 110;//某角色要离开房间.
             LeaveRoomRsp = 119;//不给离开房间者回消息.
             OnLeaveRoomRsp = 111;//某人离开时，发送给其他玩家
-
             SyncTurnReq = 112;//用户更新自己的输入.一个Turn内 5-10帧的(输入/其他) 这两个事件是帧同步核心.
             SyncTurnRsp = 113;//服务器下发场景内全部角色的输入.一个Turn内 5-10帧 所有用户每帧的事件（输入/其他）
-
             ChatInRoomReq = 120;//用户在房间内发送信息
             ChatInRoomRsp = 121;//收到某个用户在房间的信息
             ChatInLobbyReq = 122;//用户在大厅的信息
@@ -53,16 +51,21 @@
             OnPlayerFetchInput = 148;//玩家重连时不断拉取服务器保存的操作序列
             OnPlayerReConnect = 149;//断线重连开始-服务器下发时期内所有玩家的全部操作
             AudioChat = 150;//音频包,房间内的.
-
-			ActionStart = 1000;//帧同步事件编号开始
-			SyncStart = 1001;//帧同步初始化，下发随机种子之类的
-			KeyDown = 1002;//按键按下
-			KeyUp = 1003;//按键抬起
-			BtnClick = 1004;//按钮事件-类似丢弃武器，爆气之类，与上方区别在于该事件无需时长判定，无蓄力
-			PlayerEnter = 1005;//玩家在该帧内进入场景
-			PlayerLeave = 1006;//玩家在该帧内退出场景
-			ActionEnd = 2000;//帧同步事件编号结束
+			SyncCommand = 888;//帧同步指令.
         }
+
+		enum Command
+		{
+			SyncRandomSeed = 1;//帧同步初始化，下发随机种子之类的
+			CreatePlayer = 2;
+			LevelStart = 3;
+			KeyDown = 4;//按键按下
+			KeyUp = 5;//按键抬起
+			BtnClick = 6;//按钮事件-类似丢弃武器，爆气之类，与上方区别在于该事件无需时长判定，无蓄力
+			SpawnPlayer = 7;//玩家在该帧内进入场景
+			DestroyPlayer = 8;//玩家在该帧内退出场景
+
+		}
     }
 
 	message KeyData
@@ -305,21 +308,28 @@
     message TurnFrames
     {
         required uint32 turnIndex = 1;//turn序号-一个turn代表8帧内各个玩家的指令队列.
-        repeated FrameAction actions = 2;
+        repeated FrameCommand commands = 2;
     }
 
+	//从服务器一次拉取所有帧指令
 	message GameFrames
     {
-        repeated TurnFrames frames = 1;
+		repeated uint32 TurnIndex = 1;//服务器当前回合.
+        repeated TurnFrames frames = 2;
     }
 
     //帧事件.
-    message FrameAction
+    message FrameCommand
     {
-		required uint32 GameLogicFrame = 1;//游戏逻辑帧编号.
-		required uint32 playerId = 2; 
-        required MeteorMsg.MsgType action = 3;//发生了什么
-		repeated bytes data = 4;//事件参数,按ActionType指定的类型对应结构体.
+		required uint32 LogicFrame = 1;//游戏逻辑帧编号.
+		optional uint32 playerId = 2;//指定玩家编号的.
+        required MeteorMsg.MsgType message = 3;//发生了什么，可以是单机客户端指令，或者从服务器发来的指令.
+		required MeteorMsg.Command command = 4;//指令ID
+		repeated bytes data = 5;//事件参数,按ActionType指定的类型对应结构体.
+		optional uint32 data1 = 6;//子参数
+		optional uint32 data2 = 7;//子参数
+		optional uint32 data3 = 8;//子参数
+		optional uint32 data4 = 9;//子参数
     }
 
     //聊天消息.
