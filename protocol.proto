@@ -9,17 +9,8 @@
             GetRoomRsp = 101;
             CreateRoomReq = 102;
             CreateRoomRsp = 103;//建立房间其他人必须刷新，不会给其他人发有房间建立的消息.
-            JoinRoomReq = 104;
-            JoinRoomRsp = 105;
-            OnJoinRoomRsp = 106;//当我进入房间时下发给其他人.
-            EnterLevelReq = 107;//请求进入场景，
-            EnterLevelRsp = 108;//下发此消息给请求者，下发其他消息告知某人正式进入场景了.同时把帧指令表发送给进入者
-            OnEnterLevelRsp = 109;//取得了新进入玩家角色信息给与其他全部玩家,要包括服务器Turn编号和帧编号.
-            LeaveRoomReq = 110;//某角色要离开房间.
-            LeaveRoomRsp = 119;//不给离开房间者回消息.
-            OnLeaveRoomRsp = 111;//某人离开时，发送给其他玩家
-            SyncTurnReq = 112;//用户更新自己的输入.一个Turn内 5-10帧的(输入/其他) 这两个事件是帧同步核心.
-            SyncTurnRsp = 113;//服务器下发场景内全部角色的输入.一个Turn内 5-10帧 所有用户每帧的事件（输入/其他）
+            JoinRoomReq = 104;//进入房间-未进入房间时，没有必须的信息，无法帧同步
+            JoinRoomRsp = 105;//进入房间完成-开始帧同步----
             ChatInRoomReq = 120;//用户在房间内发送信息
             ChatInRoomRsp = 121;//收到某个用户在房间的信息
             ChatInLobbyReq = 122;//用户在大厅的信息
@@ -51,20 +42,17 @@
             OnPlayerFetchInput = 148;//玩家重连时不断拉取服务器保存的操作序列
             OnPlayerReConnect = 149;//断线重连开始-服务器下发时期内所有玩家的全部操作
             AudioChat = 150;//音频包,房间内的.
-			SyncCommand = 888;//帧同步指令.
+	    SyncCommand = 888;//帧同步指令.
         }
 
 		enum Command
 		{
 			SyncRandomSeed = 1;//帧同步初始化，下发随机种子之类的
-			CreatePlayer = 2;
-			LevelStart = 3;
-			KeyDown = 4;//按键按下
-			KeyUp = 5;//按键抬起
-			BtnClick = 6;//按钮事件-类似丢弃武器，爆气之类，与上方区别在于该事件无需时长判定，无蓄力
-			SpawnPlayer = 7;//玩家在该帧内进入场景
-			DestroyPlayer = 8;//玩家在该帧内退出场景
-
+			KeyDown = 2;//按键按下
+			KeyUp = 3;//按键抬起
+			BtnClick = 4;//按钮事件-类似丢弃武器，爆气之类，与上方区别在于该事件无需时长判定，无蓄力
+			SpawnPlayer = 5;//玩家在该帧内进入场景
+			DestroyPlayer = 6;//玩家在该帧内退出场景
 		}
     }
 
@@ -243,6 +231,7 @@
         required uint32 result = 1;//1确认成功，其他失败,0服务器无法容纳更多房间请换服务器
         required uint32 roomId = 2;//得到房间id.
         required uint32 levelId = 3;//得到房间使用的关卡信息，这个关卡可能是资料片其中之一.
+        required uint32 port = 4;//kcp端口号
     }
 
     message JoinRoomReq
@@ -304,20 +293,6 @@
         required int32 spawnpoint = 9;//出生点.只有初始化使用
     }
 
-    
-    message TurnFrames
-    {
-        required uint32 turnIndex = 1;//turn序号-一个turn代表8帧内各个玩家的指令队列.
-        repeated FrameCommand commands = 2;
-    }
-
-	//从服务器一次拉取所有帧指令
-	message GameFrames
-    {
-		repeated uint32 TurnIndex = 1;//服务器当前回合.
-        repeated TurnFrames frames = 2;
-    }
-
     //帧事件.
     message FrameCommand
     {
@@ -325,11 +300,22 @@
 		optional uint32 playerId = 2;//指定玩家编号的.
         required MeteorMsg.MsgType message = 3;//发生了什么，可以是单机客户端指令，或者从服务器发来的指令.
 		required MeteorMsg.Command command = 4;//指令ID
-		repeated bytes data = 5;//事件参数,按ActionType指定的类型对应结构体.
-		optional uint32 data1 = 6;//子参数
-		optional uint32 data2 = 7;//子参数
-		optional uint32 data3 = 8;//子参数
-		optional uint32 data4 = 9;//子参数
+		optional uint32 flag1 = 5;//子参数
+		optional uint32 flag2 = 6;//子参数
+		optional uint32 flag3 = 7;//子参数
+		optional uint32 flag4 = 8;//子参数
+    }
+
+    message TurnFrames
+    {
+        required uint32 turnIndex = 1;
+        repeated FrameCommand commands = 2;
+    }
+
+	//从服务器一次拉取5帧指令
+	message GameFrames
+    {
+        repeated TurnFrames frames = 1;
     }
 
     //聊天消息.
@@ -344,5 +330,5 @@
     {
         required uint32 playerId = 1;//玩家
         required uint32 type = 2;//帧类型  1 单帧即为语音消息 2 语音消息开始帧 3 语音消息结束帧
-        repeated float audio_data = 3;//音频数据
+        required bytes audio_data = 3;//音频数据
     }
