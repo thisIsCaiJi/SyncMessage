@@ -41,6 +41,7 @@
             OnPlayerFetchInput = 148;//玩家重连时不断拉取服务器保存的操作序列
             OnPlayerReConnect = 149;//断线重连开始-服务器下发时期内所有玩家的全部操作
             AudioChat = 150;//音频包,房间内的.
+            SyncCommand = 888;//服务器下发操作给KCP客户端
         }
 
 		enum Command
@@ -59,13 +60,8 @@
             //MOBA类型帧消息
             SellItem = 200;//玩家出售物品
             BuyItem = 201;//玩家购买物品
-            SyncToSvr = 888;//客户端上传当前帧指令
-            SyncToClient = 889;//服务器下发操作给KCP客户端
-            FetchCommand = 890;//从服务器获取历史操作数据-追赶服务端进度
 		}
     }
-
-    
 
     //KeyDown,KeyUp
 	message KeyData
@@ -277,7 +273,7 @@
     //帧事件.
     message FrameCommand
     {
-		required uint32 subFrame = 1;//游戏逻辑帧编号.
+		required uint32 LogicFrame = 1;//游戏逻辑帧编号.
 		optional uint32 playerId = 2;//指定玩家编号的.
 		required MeteorMsg.Command command = 3;//帧指令ID-指明了协议包怎么解开
 		required bytes data = 4;//协议包数据-用上一个指令对应的结构反序列化
@@ -286,8 +282,7 @@
 	//服务器指令
 	message GameFrames
     {
-        required uint32 frameIndex = 1;//最新帧编号/服务端/客户端
-        repeated FrameCommand commands = 2;//
+        repeated FrameCommand commands = 1;
     }
 
     //聊天消息.
